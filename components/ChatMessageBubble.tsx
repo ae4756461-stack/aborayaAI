@@ -1,7 +1,7 @@
 import React from 'react';
-import { ChatMessage, Role } from '../types';
+import { ChatMessage, Role } from '../types.ts';
 import { User } from 'lucide-react';
-import Logo from './Logo';
+import Logo from './Logo.tsx';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;

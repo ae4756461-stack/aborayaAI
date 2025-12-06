@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Chat } from "@google/genai";
 import { Send, Menu, Plus, X, Sparkles, MessageSquare, Settings, Zap } from 'lucide-react';
-import { Role, ChatMessage } from './types';
-import { createChatSession, sendMessageStream } from './services/geminiService';
-import ChatMessageBubble from './components/ChatMessageBubble';
-import TypingIndicator from './components/TypingIndicator';
-import Logo from './components/Logo';
-import { APP_NAME } from './constants';
+import { Role, ChatMessage } from './types.ts';
+import { createChatSession, sendMessageStream } from './services/geminiService.ts';
+import ChatMessageBubble from './components/ChatMessageBubble.tsx';
+import TypingIndicator from './components/TypingIndicator.tsx';
+import Logo from './components/Logo.tsx';
+import { APP_NAME } from './constants.ts';
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -26,7 +26,12 @@ const App: React.FC = () => {
   }, [messages, isLoading]);
 
   const startNewChat = useCallback(() => {
-    chatSessionRef.current = createChatSession();
+    try {
+      chatSessionRef.current = createChatSession();
+    } catch (e) {
+      console.warn("API Key might be missing, chat session init failed but UI will load.");
+    }
+    
     setMessages([
       {
         id: 'welcome',
@@ -40,7 +45,19 @@ const App: React.FC = () => {
   }, []);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || !chatSessionRef.current || isLoading) return;
+    if (!inputValue.trim() || isLoading) return;
+    
+    // Safety check for missing API Key/Session
+    if (!chatSessionRef.current) {
+        setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            role: Role.MODEL,
+            text: "يا ريس، شكلك نسيت تحط مفتاح الـ API. \nلازم تضيفه في الكود عشان أقدر أرد عليك.",
+            timestamp: new Date(),
+            isError: true
+        }]);
+        return;
+    }
 
     const userText = inputValue.trim();
     setInputValue('');
